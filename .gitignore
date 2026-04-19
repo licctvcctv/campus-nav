@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 server/data/campus.db
 server/data/users.json
+server/data/.jwt-secret

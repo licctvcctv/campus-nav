@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from 'vue'
+import { useRoute as useVueRoute } from 'vue-router'
 import { useMap } from '../composables/useMap'
 import { useMarkers } from '../composables/useMarkers'
 import { useRoute } from '../composables/useRoute'
@@ -21,12 +22,23 @@ setNavigateCallback((poiId: number) => {
   endPoint.value = poiId
 })
 
+const vueRoute = useVueRoute()
+
 const init = () => {
   if (!mapContainer.value) return
   const m = initMap(mapContainer.value)
   m.on('load', () => {
     if (showBuildings.value) render3DBuildings()
     renderMarkers()
+    // 从路由参数定位到指定POI
+    const { lng, lat, zoom, poi } = vueRoute.query
+    if (lng && lat) {
+      m.flyTo({
+        center: [Number(lng), Number(lat)],
+        zoom: Number(zoom) || 18,
+        duration: 800,
+      })
+    }
   })
 }
 

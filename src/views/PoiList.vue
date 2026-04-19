@@ -62,9 +62,9 @@ const columns: DataTableColumns = [
     title: '操作',
     key: 'actions',
     width: 100,
-    render: (_row: any) => h(NButton, {
+    render: (row: any) => h(NButton, {
       size: 'small', quaternary: true, type: 'primary',
-      onClick: () => router.push({ name: 'map' }),
+      onClick: () => router.push({ name: 'map', query: { lng: row.lng, lat: row.lat, zoom: 18, poi: row.name } }),
     }, { default: () => '在地图中查看' }),
   },
 ]

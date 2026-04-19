@@ -3,6 +3,9 @@ import { ref, computed, onMounted, h } from 'vue'
 import { useMessage, useDialog, NButton, NTag, NSpace } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import { getPois, createPoi, updatePoi, deletePoi } from '../../services/api'
+import { usePois } from '../../composables/usePois'
+
+const { refreshPois: refreshGlobalPois } = usePois()
 
 const message = useMessage()
 const dialog = useDialog()
@@ -61,6 +64,7 @@ async function handleSubmit() {
     }
     showModal.value = false
     fetchPois()
+    refreshGlobalPois()  // 同步刷新全局POI（地图/列表页立即生效）
   } catch { message.error('操作失败') }
 }
 
@@ -75,6 +79,7 @@ function handleDelete(id: number, name: string) {
         await deletePoi(id)
         message.success('已删除')
         fetchPois()
+        refreshGlobalPois()
       } catch { message.error('删除失败') }
     },
   })

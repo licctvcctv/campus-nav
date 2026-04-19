@@ -101,16 +101,14 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
 
     // Log navigation — skip for guest users
     if (isLoggedIn.value) {
-      try {
-        const dist = result?.distance ?? estimateDistance(startPoi, endPoi)
-        logNavigation({
-          start_poi: startPoi.name,
-          end_poi: endPoi.name,
-          start_poi_id: startPoi.id,
-          end_poi_id: endPoi.id,
-          distance: dist,
-        })
-      } catch { /* ignore logging errors */ }
+      const dist = result?.distance ?? estimateDistance(startPoi, endPoi)
+      logNavigation({
+        start_poi: startPoi.name,
+        end_poi: endPoi.name,
+        start_poi_id: startPoi.id,
+        end_poi_id: endPoi.id,
+        distance: dist,
+      }).catch((err: any) => console.warn('导航日志记录失败:', err))
     }
   }
 
