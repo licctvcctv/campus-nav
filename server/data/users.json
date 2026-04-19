@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1776601842440",
+    "username": "demo@example.com",
+    "password": "$2b$10$qrdyxwLuY3.kV8OUPeYC8eTndf.SsCbZxBzDnv6N/TKtC/q2lSxDW",
+    "createdAt": "2026-04-19T12:30:42.440Z"
+  },
+  {
+    "id": "1776602259416",
+    "username": "admin",
+    "password": "$2b$10$5586yj22ICXZ4ttQEeVHBO/IFJsG8H/z1ysueueFvrGqP1V124Sxm",
+    "createdAt": "2026-04-19T12:37:39.416Z"
+  }
+]

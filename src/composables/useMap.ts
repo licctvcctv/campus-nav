@@ -25,6 +25,7 @@ export function useMap() {
           },
         },
         layers: [
+          { id: 'background', type: 'background', paint: { 'background-color': '#f4f1ea' } },
           { id: 'carto-tiles', type: 'raster', source: 'carto-voyager' },
         ],
       },
@@ -32,9 +33,18 @@ export function useMap() {
       zoom: 16,
       pitch: pitch.value,
       bearing: rotation.value,
+      bearingSnap: 20,
+      dragRotate: true,
+      pitchWithRotate: true,
+      touchZoomRotate: true,
+      touchPitch: true,
     })
 
-    map.addControl(new maplibregl.NavigationControl(), 'bottom-right')
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
+
+    // Sync reactive refs when user interacts with the map directly
+    map.on('pitchend', () => { pitch.value = Math.round(map.getPitch()) })
+    map.on('rotateend', () => { rotation.value = Math.round(map.getBearing()) })
 
     mapRef.value = map
     return map
@@ -49,34 +59,6 @@ export function useMap() {
     } else {
       map.easeTo({ pitch: 0, bearing: 0, duration: 500 })
     }
-  }
-
-  const rotateCW = () => {
-    const map = mapRef.value
-    if (!map) return
-    rotation.value = (rotation.value + 30) % 360
-    map.easeTo({ bearing: rotation.value, duration: 300 })
-  }
-
-  const rotateCCW = () => {
-    const map = mapRef.value
-    if (!map) return
-    rotation.value = (rotation.value - 30) % 360
-    map.easeTo({ bearing: rotation.value, duration: 300 })
-  }
-
-  const pitchUp = () => {
-    const map = mapRef.value
-    if (!map) return
-    pitch.value = Math.min(85, pitch.value + 10)
-    map.easeTo({ pitch: pitch.value, duration: 300 })
-  }
-
-  const pitchDown = () => {
-    const map = mapRef.value
-    if (!map) return
-    pitch.value = Math.max(0, pitch.value - 10)
-    map.easeTo({ pitch: pitch.value, duration: 300 })
   }
 
   const locateToCenter = () => {
@@ -94,6 +76,6 @@ export function useMap() {
   return {
     map: mapRef,
     is3D, pitch, rotation,
-    initMap, toggle3D, rotateCW, rotateCCW, pitchUp, pitchDown, locateToCenter,
+    initMap, toggle3D, locateToCenter,
   }
 }

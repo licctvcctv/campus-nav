@@ -7,10 +7,6 @@ defineProps<{
 const emit = defineEmits<{
   toggle3D: []
   toggleBuildings: []
-  pitchUp: []
-  pitchDown: []
-  rotateCW: []
-  rotateCCW: []
   locateToCenter: []
 }>()
 </script>
@@ -42,56 +38,6 @@ const emit = defineEmits<{
             </n-button>
           </template>
           {{ showBuildings ? '隐藏' : '显示' }}3D建筑
-        </n-tooltip>
-
-        <n-divider style="margin: 2px 0" />
-
-        <!-- 俯仰↑ -->
-        <n-tooltip placement="left">
-          <template #trigger>
-            <n-button circle size="small" @click="emit('pitchUp')" :disabled="!is3D">
-              <template #icon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-              </template>
-            </n-button>
-          </template>
-          增大俯仰角
-        </n-tooltip>
-
-        <!-- 俯仰↓ -->
-        <n-tooltip placement="left">
-          <template #trigger>
-            <n-button circle size="small" @click="emit('pitchDown')" :disabled="!is3D">
-              <template #icon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </template>
-            </n-button>
-          </template>
-          减小俯仰角
-        </n-tooltip>
-
-        <!-- 顺时针 -->
-        <n-tooltip placement="left">
-          <template #trigger>
-            <n-button circle size="small" @click="emit('rotateCW')" :disabled="!is3D">
-              <template #icon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              </template>
-            </n-button>
-          </template>
-          顺时针旋转
-        </n-tooltip>
-
-        <!-- 逆时针 -->
-        <n-tooltip placement="left">
-          <template #trigger>
-            <n-button circle size="small" @click="emit('rotateCCW')" :disabled="!is3D">
-              <template #icon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.12-9.36L1 10"/></svg>
-              </template>
-            </n-button>
-          </template>
-          逆时针旋转
         </n-tooltip>
 
         <n-divider style="margin: 2px 0" />

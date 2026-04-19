@@ -2,6 +2,7 @@ import { ref, type ShallowRef } from 'vue'
 import maplibregl from 'maplibre-gl'
 import { pois, TYPE_ICONS } from '../data/pois'
 import { findShortestPath } from './useVisibilityGraph'
+import { logNavigation } from '../services/api'
 
 const ROUTE_SOURCE = 'route-line'
 const ROUTE_LAYER = 'route-line-layer'
@@ -96,6 +97,18 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
       new maplibregl.LngLatBounds(allCoords[0], allCoords[0]),
     )
     m.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: 360, right: 80 }, duration: 600 })
+
+    // Log navigation to backend
+    try {
+      const dist = result?.distance ?? estimateDistance(startPoi, endPoi)
+      logNavigation({
+        start_name: startPoi.name,
+        end_name: endPoi.name,
+        start_poi_id: startPoi.id,
+        end_poi_id: endPoi.id,
+        distance: dist,
+      })
+    } catch { /* ignore logging errors */ }
   }
 
   const resetRoute = () => { startPoint.value = null; endPoint.value = null; clearRoute() }

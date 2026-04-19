@@ -11,7 +11,7 @@ import MapLegend from '../components/MapLegend.vue'
 
 const mapContainer = ref<HTMLDivElement>()
 
-const { map, is3D, initMap, toggle3D, rotateCW, rotateCCW, pitchUp, pitchDown, locateToCenter } = useMap()
+const { map, is3D, initMap, toggle3D, locateToCenter } = useMap()
 const { searchText, selectedType, renderMarkers } = useMarkers(map)
 const { startPoint, endPoint, routeInfo, routeSteps, poiOptions, planRoute, resetRoute, swapPoints } = useRoute(map)
 const { showBuildings, render3DBuildings, toggleBuildings } = useBuildings(map)
@@ -57,10 +57,6 @@ onMounted(() => nextTick(() => init()))
       :showBuildings="showBuildings"
       @toggle3D="toggle3D"
       @toggleBuildings="toggleBuildings"
-      @pitchUp="pitchUp"
-      @pitchDown="pitchDown"
-      @rotateCW="rotateCW"
-      @rotateCCW="rotateCCW"
       @locateToCenter="locateToCenter"
     />
 
