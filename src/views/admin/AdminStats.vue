@@ -21,78 +21,51 @@ async function fetchData() {
   loading.value = false
 }
 
-// KPI values
 const totalUsers = computed(() => stats.value.totalUsers || 0)
-const totalPois = computed(() => stats.value.totalPois || 0)
+const totalPois = computed(() => stats.value.totalPOIs || 0)
 const totalNavs = computed(() => stats.value.totalNavigations || 0)
 const todayNavs = computed(() => stats.value.todayNavigations || 0)
 
-// Navigation trend chart (last 7 days)
+// Daily navigation trend chart
 const navTrendOption = computed(() => {
-  const trend = stats.value.navTrend || []
-  const days = trend.length ? trend.map((d: any) => d.date) : getLast7Days()
-  const values = trend.length ? trend.map((d: any) => d.count) : generateMockData()
+  const trend = stats.value.dailyNavs || []
+  if (!trend.length) return null
   return {
     title: { text: '导航趋势（近7天）', left: 'center', textStyle: { color: '#e5e7eb', fontSize: 14 } },
     tooltip: { trigger: 'axis' },
     grid: { left: 50, right: 20, top: 50, bottom: 30 },
-    xAxis: { type: 'category', data: days, axisLabel: { color: '#94a3b8' } },
+    xAxis: { type: 'category', data: trend.map((d: any) => d.date), axisLabel: { color: '#94a3b8' } },
     yAxis: { type: 'value', axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: 'rgba(51,65,85,0.3)' } } },
-    series: [{ type: 'line', data: values, smooth: true, areaStyle: { opacity: 0.15 }, lineStyle: { color: '#3b82f6' }, itemStyle: { color: '#3b82f6' } }],
+    series: [{ type: 'line', data: trend.map((d: any) => d.count), smooth: true, areaStyle: { opacity: 0.15 }, lineStyle: { color: '#3b82f6' }, itemStyle: { color: '#3b82f6' } }],
   }
 })
 
-// Popular POIs bar chart
-const popularPoisOption = computed(() => {
-  const popular = stats.value.popularPois || []
-  const names = popular.length ? popular.map((p: any) => p.name) : ['图书馆', '食堂A', '教学楼B', '体育馆', '宿舍']
-  const values = popular.length ? popular.map((p: any) => p.count) : [42, 35, 28, 20, 15]
+// Popular routes bar chart
+const popularRoutesOption = computed(() => {
+  const popular = stats.value.popularRoutes || []
+  if (!popular.length) return null
   return {
-    title: { text: '热门目的地', left: 'center', textStyle: { color: '#e5e7eb', fontSize: 14 } },
+    title: { text: '热门路线', left: 'center', textStyle: { color: '#e5e7eb', fontSize: 14 } },
     tooltip: { trigger: 'axis' },
-    grid: { left: 80, right: 20, top: 50, bottom: 30 },
+    grid: { left: 100, right: 20, top: 50, bottom: 30 },
     xAxis: { type: 'value', axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: 'rgba(51,65,85,0.3)' } } },
-    yAxis: { type: 'category', data: names, axisLabel: { color: '#94a3b8' } },
-    series: [{ type: 'bar', data: values, barWidth: '60%', itemStyle: { color: '#22c55e', borderRadius: [0, 4, 4, 0] } }],
+    yAxis: { type: 'category', data: popular.map((p: any) => p.route), axisLabel: { color: '#94a3b8' } },
+    series: [{ type: 'bar', data: popular.map((p: any) => p.count), barWidth: '60%', itemStyle: { color: '#22c55e', borderRadius: [0, 4, 4, 0] } }],
   }
 })
 
-// User registration trend
-const userTrendOption = computed(() => {
-  const trend = stats.value.userTrend || []
-  const days = trend.length ? trend.map((d: any) => d.date) : getLast7Days()
-  const values = trend.length ? trend.map((d: any) => d.count) : [2, 1, 3, 0, 2, 1, 4]
-  return {
-    title: { text: '用户注册趋势', left: 'center', textStyle: { color: '#e5e7eb', fontSize: 14 } },
-    tooltip: { trigger: 'axis' },
-    grid: { left: 50, right: 20, top: 50, bottom: 30 },
-    xAxis: { type: 'category', data: days, axisLabel: { color: '#94a3b8' } },
-    yAxis: { type: 'value', axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: 'rgba(51,65,85,0.3)' } } },
-    series: [{ type: 'bar', data: values, barWidth: '50%', itemStyle: { color: '#8b5cf6', borderRadius: [4, 4, 0, 0] } }],
-  }
+// Recent logs from stats response
+const recentLogs = computed(() => {
+  return stats.value.recentLogs || []
 })
 
 const logColumns: DataTableColumns = [
-  { title: 'ID', key: 'id', width: 60, align: 'center' },
   { title: '用户', key: 'username', width: 120 },
-  { title: '起点', key: 'start_name', width: 160 },
-  { title: '终点', key: 'end_name', width: 160 },
+  { title: '起点', key: 'start_poi', width: 160 },
+  { title: '终点', key: 'end_poi', width: 160 },
   { title: '距离', key: 'distance', width: 100, render: (row: any) => row.distance ? `${row.distance}m` : '-' },
   { title: '时间', key: 'created_at', width: 180, render: (row: any) => row.created_at ? new Date(row.created_at).toLocaleString() : '-' },
 ]
-
-function getLast7Days() {
-  const days: string[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i)
-    days.push(`${d.getMonth() + 1}/${d.getDate()}`)
-  }
-  return days
-}
-
-function generateMockData() {
-  return Array.from({ length: 7 }, () => Math.floor(Math.random() * 30) + 5)
-}
 
 onMounted(fetchData)
 </script>
@@ -119,20 +92,33 @@ onMounted(fetchData)
       <!-- Charts -->
       <n-grid :cols="2" :x-gap="16">
         <n-grid-item>
-          <n-card><EChart :option="navTrendOption" height="300px" /></n-card>
+          <n-card>
+            <EChart v-if="navTrendOption" :option="navTrendOption" height="300px" />
+            <n-empty v-else description="暂无数据" />
+          </n-card>
         </n-grid-item>
         <n-grid-item>
-          <n-card><EChart :option="popularPoisOption" height="300px" /></n-card>
+          <n-card>
+            <EChart v-if="popularRoutesOption" :option="popularRoutesOption" height="300px" />
+            <n-empty v-else description="暂无数据" />
+          </n-card>
         </n-grid-item>
       </n-grid>
 
-      <n-card>
-        <EChart :option="userTrendOption" height="280px" />
-      </n-card>
-
       <!-- Recent nav logs -->
       <n-card title="最近导航记录">
-        <n-data-table :columns="logColumns" :data="navLogs" :loading="loading" :bordered="false" striped :pagination="{ pageSize: 10 }" size="small" />
+        <template v-if="recentLogs.length || navLogs.length">
+          <n-data-table
+            :columns="logColumns"
+            :data="recentLogs.length ? recentLogs : navLogs"
+            :loading="loading"
+            :bordered="false"
+            striped
+            :pagination="{ pageSize: 10 }"
+            size="small"
+          />
+        </template>
+        <n-empty v-else description="暂无数据" />
       </n-card>
     </n-space>
   </div>

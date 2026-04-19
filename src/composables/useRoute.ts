@@ -1,8 +1,10 @@
-import { ref, type ShallowRef } from 'vue'
+import { ref, computed, type ShallowRef } from 'vue'
 import maplibregl from 'maplibre-gl'
-import { pois, TYPE_ICONS } from '../data/pois'
+import { TYPE_ICONS } from '../data/pois'
 import { findShortestPath } from './useVisibilityGraph'
 import { logNavigation } from '../services/api'
+import { usePois } from './usePois'
+import { useAuth } from './useAuth'
 
 const ROUTE_SOURCE = 'route-line'
 const ROUTE_LAYER = 'route-line-layer'
@@ -13,14 +15,18 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
   const endPoint = ref<number | null>(null)
   const routeInfo = ref('')
   const routeSteps = ref<string[]>([])
+  const { pois } = usePois()
+  const { isLoggedIn } = useAuth()
 
   let startMarker: maplibregl.Marker | null = null
   let endMarker: maplibregl.Marker | null = null
 
-  const poiOptions = pois.map(p => ({
-    label: `${TYPE_ICONS[p.type] || '📍'} ${p.name}`,
-    value: p.id,
-  }))
+  const poiOptions = computed(() =>
+    pois.value.map(p => ({
+      label: `${TYPE_ICONS[p.type] || '\u{1F4CD}'} ${p.name}`,
+      value: p.id,
+    }))
+  )
 
   const clearRoute = () => {
     const m = map.value
@@ -43,20 +49,18 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
       return
     }
 
-    const startPoi = pois.find(p => p.id === startPoint.value)
-    const endPoi = pois.find(p => p.id === endPoint.value)
+    const startPoi = pois.value.find(p => p.id === startPoint.value)
+    const endPoi = pois.value.find(p => p.id === endPoint.value)
     if (!startPoi || !endPoi) return
 
     clearRoute()
 
-    // Visibility Graph 避障寻路
     const result = findShortestPath(
       [startPoi.lng, startPoi.lat],
       [endPoi.lng, endPoi.lat],
     )
 
     if (!result || result.coordinates.length < 2) {
-      // fallback: 直线
       const coords: [number, number][] = [[startPoi.lng, startPoi.lat], [endPoi.lng, endPoi.lat]]
       drawRoute(m, coords, true)
       const dist = result?.distance ?? estimateDistance(startPoi, endPoi)
@@ -67,7 +71,6 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
       const walkTime = Math.ceil(result.distance / 80)
       routeInfo.value = `距离 ${formatDist(result.distance)}，步行约 ${walkTime} 分钟${result.adjustedStart || result.adjustedEnd ? '（已自动避开建筑内部）' : ''}`
 
-      // 路线步骤：查找途经的POI
       const steps = [`从 ${startPoi.name} 出发`]
       const seenPoiIds = new Set<number>()
       for (let i = 1; i < result.coordinates.length - 1; i++) {
@@ -82,7 +85,6 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
       routeSteps.value = steps
     }
 
-    // 起终点标记
     const startAnchor = result?.start ?? [startPoi.lng, startPoi.lat]
     const endAnchor = result?.end ?? [endPoi.lng, endPoi.lat]
     startMarker = createCircleMarker('起', '#22c55e')
@@ -90,7 +92,6 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
     endMarker = createCircleMarker('终', '#ef4444')
       .setLngLat(endAnchor).addTo(m)
 
-    // 适应视野
     const allCoords = result?.coordinates ?? [[startPoi.lng, startPoi.lat], [endPoi.lng, endPoi.lat]]
     const bounds = allCoords.reduce(
       (b, c) => b.extend(c),
@@ -98,17 +99,33 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
     )
     m.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: 360, right: 80 }, duration: 600 })
 
-    // Log navigation to backend
-    try {
-      const dist = result?.distance ?? estimateDistance(startPoi, endPoi)
-      logNavigation({
-        start_name: startPoi.name,
-        end_name: endPoi.name,
-        start_poi_id: startPoi.id,
-        end_poi_id: endPoi.id,
-        distance: dist,
-      })
-    } catch { /* ignore logging errors */ }
+    // Log navigation — skip for guest users
+    if (isLoggedIn.value) {
+      try {
+        const dist = result?.distance ?? estimateDistance(startPoi, endPoi)
+        logNavigation({
+          start_poi: startPoi.name,
+          end_poi: endPoi.name,
+          start_poi_id: startPoi.id,
+          end_poi_id: endPoi.id,
+          distance: dist,
+        })
+      } catch { /* ignore logging errors */ }
+    }
+  }
+
+  function findNearestIntermediatePoi(lng: number, lat: number, startId: number, endId: number) {
+    let best: (typeof pois.value)[number] | null = null
+    let bestDistance = Infinity
+    for (const poi of pois.value) {
+      if (poi.id === startId || poi.id === endId) continue
+      const distance = Math.hypot(poi.lng - lng, poi.lat - lat)
+      if (distance < 0.0003 && distance < bestDistance) {
+        best = poi
+        bestDistance = distance
+      }
+    }
+    return best
   }
 
   const resetRoute = () => { startPoint.value = null; endPoint.value = null; clearRoute() }
@@ -117,50 +134,25 @@ export function useRoute(map: ShallowRef<maplibregl.Map | null>) {
   return { startPoint, endPoint, routeInfo, routeSteps, poiOptions, planRoute, resetRoute, swapPoints }
 }
 
-function findNearestIntermediatePoi(lng: number, lat: number, startId: number, endId: number) {
-  let best: (typeof pois)[number] | null = null
-  let bestDistance = Infinity
-
-  for (const poi of pois) {
-    if (poi.id === startId || poi.id === endId) continue
-    const distance = Math.hypot(poi.lng - lng, poi.lat - lat)
-    if (distance < 0.0003 && distance < bestDistance) {
-      best = poi
-      bestDistance = distance
-    }
-  }
-
-  return best
-}
-
 function drawRoute(m: maplibregl.Map, coords: [number, number][], dashed: boolean) {
   m.addSource(ROUTE_SOURCE, {
     type: 'geojson',
     data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } },
   })
-
   if (dashed) {
     m.addLayer({
-      id: ROUTE_DASH,
-      type: 'line',
-      source: ROUTE_SOURCE,
+      id: ROUTE_DASH, type: 'line', source: ROUTE_SOURCE,
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': '#94a3b8', 'line-width': 3, 'line-dasharray': [3, 3] },
     })
   } else {
-    // 外描边
     m.addLayer({
-      id: ROUTE_DASH,
-      type: 'line',
-      source: ROUTE_SOURCE,
+      id: ROUTE_DASH, type: 'line', source: ROUTE_SOURCE,
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': '#1e40af', 'line-width': 8, 'line-opacity': 0.3 },
     })
-    // 主线
     m.addLayer({
-      id: ROUTE_LAYER,
-      type: 'line',
-      source: ROUTE_SOURCE,
+      id: ROUTE_LAYER, type: 'line', source: ROUTE_SOURCE,
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': '#3b82f6', 'line-width': 4, 'line-opacity': 0.95 },
     })
@@ -169,12 +161,13 @@ function drawRoute(m: maplibregl.Map, coords: [number, number][], dashed: boolea
 
 function createCircleMarker(text: string, color: string): maplibregl.Marker {
   const el = document.createElement('div')
-  el.innerHTML = `<div style="
-    width:30px;height:30px;border-radius:50%;background:${color};
+  const inner = document.createElement('div')
+  inner.style.cssText = `width:30px;height:30px;border-radius:50%;background:${color};
     border:3px solid white;box-shadow:0 2px 8px ${color}66;
     display:flex;align-items:center;justify-content:center;
-    color:white;font-size:13px;font-weight:bold;
-  ">${text}</div>`
+    color:white;font-size:13px;font-weight:bold;`
+  inner.textContent = text
+  el.appendChild(inner)
   return new maplibregl.Marker({ element: el })
 }
 

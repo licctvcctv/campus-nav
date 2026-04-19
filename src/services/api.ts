@@ -1,4 +1,6 @@
-const BASE = 'http://localhost:3456'
+import { API_BASE } from '../config'
+
+const BASE = API_BASE
 
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem('token') || ''

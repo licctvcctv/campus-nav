@@ -14,10 +14,10 @@ const router = createRouter({
       path: '/',
       component: () => import('../views/Layout.vue'),
       children: [
-        { path: '', name: 'map', component: () => import('../views/MapView.vue') },
-        { path: 'poi', name: 'poi', component: () => import('../views/PoiList.vue') },
-        { path: 'stats', name: 'stats', component: () => import('../views/Stats.vue') },
-        { path: 'about', name: 'about', component: () => import('../views/About.vue') },
+        { path: '', name: 'map', component: () => import('../views/MapView.vue'), meta: { public: true } },
+        { path: 'poi', name: 'poi', component: () => import('../views/PoiList.vue'), meta: { public: true } },
+        { path: 'stats', name: 'stats', component: () => import('../views/Stats.vue'), meta: { public: true } },
+        { path: 'about', name: 'about', component: () => import('../views/About.vue'), meta: { public: true } },
         {
           path: 'admin/users',
           name: 'admin-users',

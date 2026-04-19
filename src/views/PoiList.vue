@@ -2,16 +2,18 @@
 import { ref, computed, h } from 'vue'
 import { NTag, NButton } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
-import { pois, POI_TYPES, TYPE_COLORS } from '../data/pois'
+import { POI_TYPES, TYPE_COLORS } from '../data/pois'
 import { SVG_ICONS } from '../data/icons'
 import { useRouter } from 'vue-router'
+import { usePois } from '../composables/usePois'
 
 const router = useRouter()
 const searchText = ref('')
 const filterType = ref('全部')
+const { pois } = usePois()
 
 const filteredPois = computed(() => {
-  return pois.filter(p => {
+  return pois.value.filter(p => {
     const matchType = filterType.value === '全部' || p.type === filterType.value
     const matchSearch = !searchText.value || p.name.includes(searchText.value) || p.description.includes(searchText.value)
     return matchType && matchSearch
@@ -20,11 +22,10 @@ const filteredPois = computed(() => {
 
 const typeStats = computed(() => {
   const map = new Map<string, number>()
-  pois.forEach(p => map.set(p.type, (map.get(p.type) || 0) + 1))
+  pois.value.forEach(p => map.set(p.type, (map.get(p.type) || 0) + 1))
   return Array.from(map.entries()).map(([type, count]) => ({ type, count }))
 })
 
-// 内联SVG图标（小尺寸用于表格和KPI）
 const inlineSvg = (type: string, size = 16) => {
   const raw = SVG_ICONS[type] || SVG_ICONS['地标']
   return raw
@@ -41,7 +42,7 @@ const columns: DataTableColumns = [
     width: 200,
     render: (row: any) => h('span', {
       style: 'font-weight:500;display:flex;align-items:center;gap:6px',
-      innerHTML: `${inlineSvg(row.type)} ${row.name}`,
+      innerHTML: `${inlineSvg(row.type)} ${escapeHtml(row.name)}`,
     }),
   },
   {
@@ -67,6 +68,12 @@ const columns: DataTableColumns = [
     }, { default: () => '在地图中查看' }),
   },
 ]
+
+function escapeHtml(str: string): string {
+  const el = document.createElement('span')
+  el.textContent = str
+  return el.innerHTML
+}
 </script>
 
 <template>

@@ -2,9 +2,10 @@ import initSqlJs from 'sql.js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import config from './config.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = path.join(__dirname, 'data', 'campus.db')
+const DB_PATH = config.DB_PATH
 
 let db = null
 
@@ -12,7 +13,7 @@ export async function initDB() {
   const SQL = await initSqlJs()
 
   // Ensure data directory exists
-  const dataDir = path.join(__dirname, 'data')
+  const dataDir = path.dirname(DB_PATH)
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true })
   }

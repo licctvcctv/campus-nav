@@ -70,12 +70,17 @@ router.post('/login', async (req, res) => {
 
 // GET /api/me
 router.get('/me', authMiddleware, (req, res) => {
-  res.json({
-    success: true,
-    id: req.user.id,
-    username: req.user.username,
-    role: req.user.role
-  })
+  try {
+    res.json({
+      success: true,
+      id: req.user.id,
+      username: req.user.username,
+      role: req.user.role
+    })
+  } catch (err) {
+    console.error('Get me error:', err)
+    res.status(500).json({ success: false, message: '获取用户信息失败' })
+  }
 })
 
 export default router

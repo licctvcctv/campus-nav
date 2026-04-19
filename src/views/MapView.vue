@@ -12,9 +12,14 @@ import MapLegend from '../components/MapLegend.vue'
 const mapContainer = ref<HTMLDivElement>()
 
 const { map, is3D, initMap, toggle3D, locateToCenter } = useMap()
-const { searchText, selectedType, renderMarkers } = useMarkers(map)
+const { searchText, selectedType, renderMarkers, setNavigateCallback } = useMarkers(map)
 const { startPoint, endPoint, routeInfo, routeSteps, poiOptions, planRoute, resetRoute, swapPoints } = useRoute(map)
 const { showBuildings, render3DBuildings, toggleBuildings } = useBuildings(map)
+
+// When user clicks "导航到这里" on a marker popup, set it as destination
+setNavigateCallback((poiId: number) => {
+  endPoint.value = poiId
+})
 
 const init = () => {
   if (!mapContainer.value) return

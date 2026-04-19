@@ -1,6 +1,8 @@
 import { ref, computed } from 'vue'
 
-const API = 'http://localhost:3456/api'
+import { API_BASE } from '../config'
+
+const API = `${API_BASE}/api`
 const token = ref(localStorage.getItem('token') || '')
 const username = ref(localStorage.getItem('username') || '')
 const role = ref(localStorage.getItem('role') || 'user')

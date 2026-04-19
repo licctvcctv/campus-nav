@@ -49,6 +49,10 @@ async function handleRegister() {
 function onKeyEnter() {
   tab.value === 'login' ? handleLogin() : handleRegister()
 }
+
+function guestBrowse() {
+  router.replace('/')
+}
 </script>
 
 <template>
@@ -95,6 +99,12 @@ function onKeyEnter() {
             </n-form>
           </n-tab-pane>
         </n-tabs>
+
+        <div style="text-align: center; margin-top: 16px">
+          <n-button text type="info" @click="guestBrowse">
+            游客浏览 - 继续浏览地图
+          </n-button>
+        </div>
       </n-card>
     </div>
   </div>

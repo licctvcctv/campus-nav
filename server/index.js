@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import config from './config.js'
 import { initDB, saveDB } from './db.js'
 import authRoutes from './routes/auth.js'
 import userRoutes from './routes/users.js'
@@ -8,9 +9,9 @@ import { publicRouter as announcementPublicRoutes, adminRouter as announcementAd
 import { publicRouter as navLogPublicRoutes, adminRouter as navLogAdminRoutes, statsRouter } from './routes/navLogs.js'
 
 const app = express()
-const PORT = 3456
+const PORT = config.PORT
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
+app.use(cors({ origin: config.CORS_ORIGIN, credentials: true }))
 app.use(express.json())
 
 // Auth routes: /api/register, /api/login, /api/me

@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
 import { queryOne } from './db.js'
+import config from './config.js'
 
-const JWT_SECRET = 'campus-nav-secret-key-2024'
+const JWT_SECRET = config.JWT_SECRET
 
 export { JWT_SECRET }
 

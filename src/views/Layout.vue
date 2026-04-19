@@ -15,6 +15,7 @@ import {
   LocationOutline,
   MegaphoneOutline,
   StatsChartOutline,
+  LogInOutline,
 } from '@vicons/ionicons5'
 import { useAuth } from '../composables/useAuth'
 import { getAnnouncements } from '../services/api'
@@ -22,16 +23,16 @@ import { getAnnouncements } from '../services/api'
 const router = useRouter()
 const route = useRoute()
 const collapsed = ref(false)
-const { username, isAdmin, logout } = useAuth()
+const { username, isAdmin, isLoggedIn, logout } = useAuth()
 
 const renderIcon = (icon: any) => () => h(NIcon, null, { default: () => h(icon) })
 
 const menuOptions = computed(() => {
   const items: any[] = [
     { label: '校园地图', key: 'map', icon: renderIcon(MapOutline) },
-    { label: 'POI管理', key: 'poi', icon: renderIcon(ListOutline) },
-    { label: '数据统计', key: 'stats', icon: renderIcon(BarChartOutline) },
-    { label: '关于系统', key: 'about', icon: renderIcon(InformationCircleOutline) },
+    { label: isAdmin.value ? 'POI管理' : '兴趣点', key: 'poi', icon: renderIcon(ListOutline) },
+    { label: '校园数据', key: 'stats', icon: renderIcon(BarChartOutline) },
+    { label: '关于', key: 'about', icon: renderIcon(InformationCircleOutline) },
   ]
   if (isAdmin.value) {
     items.push({
@@ -58,6 +59,10 @@ const handleMenuUpdate = (key: string) => {
 function handleLogout() {
   logout()
   router.replace('/login')
+}
+
+function handleLogin() {
+  router.push('/login')
 }
 
 // Announcements
@@ -127,14 +132,23 @@ function announcementType(type: string) {
         <div style="display: flex; align-items: center; gap: 12px">
           <n-tag type="info" size="small" :bordered="false">毕业设计</n-tag>
           <n-tag v-if="isAdmin" type="warning" size="small" :bordered="false">管理员</n-tag>
-          <div style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 13px">
-            <n-icon :size="18"><PersonCircleOutline /></n-icon>
-            <span>{{ username }}</span>
-          </div>
-          <n-button quaternary size="small" @click="handleLogout">
-            <template #icon><n-icon><LogOutOutline /></n-icon></template>
-            退出
-          </n-button>
+          <template v-if="isLoggedIn">
+            <div style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 13px">
+              <n-icon :size="18"><PersonCircleOutline /></n-icon>
+              <span>{{ username }}</span>
+            </div>
+            <n-button quaternary size="small" @click="handleLogout">
+              <template #icon><n-icon><LogOutOutline /></n-icon></template>
+              退出
+            </n-button>
+          </template>
+          <template v-else>
+            <n-tag size="small" :bordered="false">游客</n-tag>
+            <n-button quaternary size="small" type="primary" @click="handleLogin">
+              <template #icon><n-icon><LogInOutline /></n-icon></template>
+              登录
+            </n-button>
+          </template>
         </div>
       </n-layout-header>
 

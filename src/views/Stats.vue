@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { pois, TYPE_COLORS, TYPE_ICONS } from '../data/pois'
+import { TYPE_COLORS, TYPE_ICONS } from '../data/pois'
 import EChart from '../components/EChart.vue'
+import { usePois } from '../composables/usePois'
 
-// 按类型统计
+const { pois } = usePois()
+
 const typeData = computed(() => {
   const map = new Map<string, number>()
-  pois.forEach(p => map.set(p.type, (map.get(p.type) || 0) + 1))
+  pois.value.forEach(p => map.set(p.type, (map.get(p.type) || 0) + 1))
   return Array.from(map.entries()).map(([name, value]) => ({ name, value }))
 })
 
-// 饼图
 const pieOption = computed(() => ({
   title: { text: 'POI类型分布', left: 'center', textStyle: { color: '#e5e7eb' } },
   tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -29,7 +30,6 @@ const pieOption = computed(() => ({
   }],
 }))
 
-// 柱状图
 const barOption = computed(() => ({
   title: { text: 'POI数量统计', left: 'center', textStyle: { color: '#e5e7eb' } },
   tooltip: { trigger: 'axis' },
@@ -54,7 +54,6 @@ const barOption = computed(() => ({
   }],
 }))
 
-// 散点图：POI 地理分布
 const scatterOption = computed(() => ({
   title: { text: 'POI地理分布', left: 'center', textStyle: { color: '#e5e7eb' } },
   tooltip: {
@@ -63,27 +62,21 @@ const scatterOption = computed(() => ({
   },
   grid: { left: 80, right: 30, top: 50, bottom: 50 },
   xAxis: {
-    type: 'value',
-    name: '经度',
+    type: 'value', name: '经度',
     nameTextStyle: { color: '#94a3b8' },
     axisLabel: { color: '#94a3b8', formatter: (v: number) => v.toFixed(3) },
     splitLine: { lineStyle: { color: 'rgba(51, 65, 85, 0.3)' } },
-    min: 126.558,
-    max: 126.569,
   },
   yAxis: {
-    type: 'value',
-    name: '纬度',
+    type: 'value', name: '纬度',
     nameTextStyle: { color: '#94a3b8' },
     axisLabel: { color: '#94a3b8', formatter: (v: number) => v.toFixed(3) },
     splitLine: { lineStyle: { color: 'rgba(51, 65, 85, 0.3)' } },
-    min: 45.808,
-    max: 45.826,
   },
   series: [{
     type: 'scatter',
     symbolSize: 14,
-    data: pois.map(p => [p.lng, p.lat, p.name, p.type]),
+    data: pois.value.map(p => [p.lng, p.lat, p.name, p.type]),
     itemStyle: {
       color: (p: any) => TYPE_COLORS[p.data[3]] || '#3b82f6',
     },
@@ -94,7 +87,6 @@ const scatterOption = computed(() => ({
 <template>
   <div style="padding: 24px">
     <n-space vertical :size="20">
-      <!-- KPI 概览 -->
       <n-grid :cols="4" :x-gap="16">
         <n-grid-item>
           <n-card size="small">
@@ -130,17 +122,12 @@ const scatterOption = computed(() => ({
         </n-grid-item>
       </n-grid>
 
-      <!-- 图表 -->
       <n-grid :cols="2" :x-gap="16">
         <n-grid-item>
-          <n-card>
-            <EChart :option="pieOption" height="360px" />
-          </n-card>
+          <n-card><EChart :option="pieOption" height="360px" /></n-card>
         </n-grid-item>
         <n-grid-item>
-          <n-card>
-            <EChart :option="barOption" height="360px" />
-          </n-card>
+          <n-card><EChart :option="barOption" height="360px" /></n-card>
         </n-grid-item>
       </n-grid>
 
